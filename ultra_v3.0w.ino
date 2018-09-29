@@ -7,6 +7,7 @@
 #define PWM_W2 12
 #define PWM_W3 10
 
+
 /****************************defining distances*****************************/
 #define dist1 90  //above this run at base, below this decelerate upto dist2 linerally
 #define dist2 75  //above this decelerate upto dist2 linerally, below this stop
@@ -21,15 +22,17 @@
 #define echoPin1 14
 #define pingPin2 21
 #define echoPin2 20
+
 /*****************************variables**********************************/
+
 float duration1, duration2, pwm1=0, pwm2=0, pwm3=0, cm1, cm2, i=0, j=0, x=0,base=0;
 bool dirFlag=0;   //specifies the direction of the bot. 0 for forward and 1 for backward
-/***************************functions************************************/
 long  microsecondsToCentimeters(long microseconds) ;
 char recieved,prev=0;
-/******************************MAIN CODE***********************************/
 
-void forward()
+/***************************functions************************************/
+
+void forward()                                              //moves towards the wall
 {
   digitalWrite(Dir_W1,HIGH);
   digitalWrite(Dir_W3,HIGH);
@@ -46,19 +49,14 @@ void forward()
  base=base1;
 }
  
-void decelerate()
-{
-  i=pwm1;                               //storing initial value of i
-  pwm1=base*(cm1-dist2)/(dist1-dist2);  //reduce the speed till this pwm
+void decelerate()                                             //decelerate the bot proportional to the cm1-dist2 from dist1                                     
+{         
+  i=pwm1;                                                     //storing initial value of i
+  pwm1=base*(cm1-dist2)/(dist1-dist2);                       //reduce the speed till this pwm
   pwm3=base*(cm1-dist2)/(dist1-dist2);
- /*if(cm1==76)
- {
-  pwm1=0;
-  pwm2=0;
- }*/
   digitalWrite(Dir_W1,HIGH);
   digitalWrite(Dir_W3,HIGH);
-  for(;i>pwm1;i--)
+  for(;i>=pwm1;i--)
   { 
     analogWrite(PWM_W1,constrain(i,0,150));
     analogWrite(PWM_W3,constrain(i,0,150));   
@@ -69,21 +67,21 @@ void decelerate()
 
 void Stop()
 {
-    for(i=pwm1;i>0;)
-    {i--;
+    for(i=pwm1;i>=0;i--)
+    {
       analogWrite(PWM_W1,constrain(i,0,150));
       analogWrite(PWM_W3,constrain(i,0,150));
       delay(5);  
     }
   pwm1=0;
   pwm3=0;  
-  prev='s';                   //to know the previous state
+  prev='s';                                         //to know the previous state
   base=0;
 }
 
-void reverse()
+void reverse()                                      //reverse function i.e:away from wall 
 {  
-    Stop();
+    Stop();                                         //first stop the bot before reversing the direction
     digitalWrite(Dir_W1,LOW);
     digitalWrite(Dir_W3,LOW);
     for(i=0;i<50;i+=5)
@@ -97,14 +95,15 @@ void reverse()
   prev='r';
   base=50;
 }
-void forward1()
+
+void forward1()                                     //moves forward i.e away from wall
 {
   digitalWrite(Dir_W1,LOW);
   digitalWrite(Dir_W2,LOW);
  for(i=pwm1;i<base1;i++) 
  {                           
     analogWrite(PWM_W1,constrain(i,0,200));
-    analogWrite(PWM_W2,constrain(i,0,200));
+    analogWrite(255-PWM_W2,constrain(i,0,200));
     delay(5);
  }
  prev='F';
@@ -115,16 +114,16 @@ void forward1()
  
 void decelerate1()
 {
-  i=pwm1;                               //storing initial value of i
+  i=pwm1;                                               //storing initial value of i
   digitalWrite(Dir_W1,LOW);
   digitalWrite(Dir_W2,LOW);
-  pwm1=base1*(cm1-dist5)/(dist4-dist5);  //reduce to this pwm value
+  pwm1=base1*(cm1-dist5)/(dist4-dist5);                 //reduce to this pwm value
   pwm2=base1*(cm1-dist5)/(dist4-dist5);     
  
   for(;i>pwm1;i--)
   { 
     analogWrite(PWM_W1,constrain(i,0,150));
-    analogWrite(PWM_W2,constrain(i,0,150));   
+    analogWrite(255-PWM_W2,constrain(i,0,150));   
     delay(5);
   }
   prev='D';
@@ -132,10 +131,10 @@ void decelerate1()
 
 void Stop1()
 {
-    for(i=pwm1;i>=0;)
-    {i--;
+    for(i=pwm1;i>=0;i--)
+    {
       analogWrite(PWM_W1,constrain(i,0,150));
-      analogWrite(PWM_W2,constrain(i,0,150));
+      analogWrite(255-PWM_W2,constrain(i,0,150));
       delay(5);  
     }
   pwm1=0;
@@ -152,13 +151,13 @@ void reverse1()
     for(i=0;i<50;i+=5)
     {
       analogWrite(PWM_W1,constrain(i,0,150));
-      analogWrite(PWM_W2,constrain(i,0,150));
+      analogWrite(255-PWM_W2,constrain(i,0,150));
       delay(5);  
     }
   pwm1=50;
   pwm2=50;  
   prev='R';
-  base=base1;
+  base=50;
 }
 
 
@@ -179,21 +178,21 @@ void setup()
 void loop()
 {
   // put your main code here, to run repeatedly:
-  digitalWrite(pingPin1, LOW);
+  digitalWrite(pingPin1, LOW);                                   //excite ultrasonic1   
   delayMicroseconds(2);
   digitalWrite(pingPin1, HIGH);
   delayMicroseconds(5);
   digitalWrite(pingPin1, LOW);
   duration1 = pulseIn(echoPin1, HIGH);
-  cm1 = constrain(microsecondsToCentimeters(duration1),0,200);
+  cm1 = constrain(microsecondsToCentimeters(duration1),0,200);   //calculates ultra1 distance from wall
   
-  digitalWrite(pingPin2, LOW);
+  digitalWrite(pingPin2, LOW);                                  //excite ultra2 
   delayMicroseconds(2);
   digitalWrite(pingPin2, HIGH);
   delayMicroseconds(5);
   digitalWrite(pingPin2, LOW);
   duration2 = pulseIn(echoPin2, HIGH);
-  cm2 = constrain(microsecondsToCentimeters(duration2),0,200);
+  cm2 = constrain(microsecondsToCentimeters(duration2),0,200);    //calculates ultra2 distance from wall
 /*if(Serial.available()>0)
 {
     recieved=Serial.read();  
@@ -210,15 +209,14 @@ switch(recieved)
       //pwm3=0;
       Stop();
      }
-   else if(cm1>dist1)   //run at base
+   else if(cm1>dist1)                           //run at base
     {                      
       //digitalWrite(Dir_W1,LOW);
       //digitalWrite(Dir_W3,LOW);
        forward();
     }
     
-     
-    else if(cm1<=dist1 && cm1>dist2-2) //decelerate
+    else if(cm1<=dist1 && cm1>dist2-2)          //decelerate
      {      
       /*digitalWrite(Dir_W1,LOW);
       digitalWrite(Dir_W3,LOW);
@@ -226,7 +224,7 @@ switch(recieved)
       pwm3=base*(cm1-dist2)/(dist1-dist2);*/
       decelerate();     
      }
-    else if(cm1<dist3+2)         //move backwards, adding two for common area
+    else if(cm1<dist3+2)                              //move backwards, adding two for common area
     { 
       //digitalWrite(Dir_W1,HIGH);
      // digitalWrite(Dir_W3,HIGH);
@@ -242,29 +240,30 @@ switch(recieved)
       analogWrite(PWM_W1,constrain(pwm1,0,150));
       analogWrite(PWM_W3,constrain(pwm3,0,150));
     }
-  }
+  }                                                   //if cm1-cm2 condition ends  
    
-   
-  
-  else
+
+ else                                                //if orientation of link on which ultra are mounted not parallel to wall  
   {
-    if(cm1<dist2+2&&cm1>=dist3)
+    if(cm1<dist2+2&&cm1>=dist3)                      //not changing orientation in stop region 
     {
       Stop();
     }
     else 
     {
     //x=0;
-    switch(dirFlag){
-      case 0:
+    switch(dirFlag)                                 
+     {
+      case 0:                                         //dirflag=0 when cm1>stop condition 
         i=pwm1;
         j=pwm3;
         pwm1=base+kp*(cm2-cm1);
         pwm3=base+kp*(cm1-cm2);
-        prev='3';
-        if(pwm1>i)
+        prev='3';                                      //changing prev value for (prev!=r) condition to become true if bot is in reverse region
+        
+        if(pwm1>i)                                    //i.e cm2>cm1 ,therefore attach ultra2 on wheel-1 side
         {
-          for(;i<pwm1 && j>pwm3;i+=2,j-=2)
+          for(;i<pwm1 && j>pwm3;i+=2,j-=2)            
           {
            analogWrite(PWM_W1,constrain(i,0,150));
            analogWrite(PWM_W3,constrain(j,0,150));
@@ -280,13 +279,12 @@ switch(recieved)
            delay(5);
           } 
          }
-        //Serial.println(0);
         break;
       
-      case 1:
+      case 1:                                         //if bot is in reverse region
         i=pwm1;
         j=pwm3;
-        pwm1=base+kp*(cm1-cm2);
+        pwm1=base+kp*(cm1-cm2);                       
         pwm3=base+kp*(cm2-cm1);
         if(pwm1>i)
         {
@@ -306,18 +304,15 @@ switch(recieved)
            delay(5);
           } 
          }
-       
-        //Serial.println(1);
         break;
       
-        
        default:
         pwm1=0;
         pwm3=0;
         break;         
-     }
-    }
-  }
+      }                                                      //switch case ends
+    }                                                        //else for switch case ends
+  }                                                          //else for orientation ends
   
   /*Serial.print(constrain(pwm1,0,150));
   Serial.print("\t");
@@ -328,27 +323,24 @@ switch(recieved)
   Serial.println(cm2);
   delay(500);*/
 
-if((cm1<=dist2&&cm1>=dist3))
-{ while(1){  
-  if(abs(cm1-cm2)<=1)
-          {
+if(cm1<=dist2&&cm1>=dist3)                                  //if bot is in stop region ,move in opposite diagonal 
+{                                                           //for that we use wheel 1 and wheel 2
+  while(1)
+  {  
+    if(abs(cm1-cm2)<=1)
+       {
             dirFlag=0;
-                if(cm1>=dist3&&cm1<dist4)             //run at base
+                if(cm1>=dist3&&cm1<dist4)               //run at base
             {                      
              // digitalWrite(Dir_W1,HIGH);
              // digitalWrite(Dir_W2,HIGH);
              forward1();
             }
-            else if(cm1>=dist4 && cm1<dist5+2)       //decelerate
+            else if(cm1>=dist4 && cm1<dist5+2)           //decelerate
             {      
-             /* digitalWrite(Dir_W1,HIGH);
-              digitalWrite(Dir_W2,HIGH);
-              pwm1=base*(cm1-dist5)/(dist4-dist5);
-              pwm2=base*(cm1-dist5)/(dist4-dist5);*/
               decelerate1();
-             // Serial.println("1");     
             }
-            else if( cm1>=dist5)         //stop
+            else if( cm1>=dist5)                         //stop
             {       
               Stop1();
             }
@@ -366,12 +358,11 @@ if((cm1<=dist2&&cm1>=dist3))
               pwm1=0;
               pwm2=0;
               analogWrite(PWM_W1,0);
-              analogWrite(PWM_W2,0);
+              analogWrite(255-PWM_W2,0);                           //255-pwm2 used since inverting motor driver was used for wheel 2
             }
-           
-         }
+         }                                                        //if cm1-cm2 condition ends
 
-         else
+         else                                                     //for orientation
           {
             if( cm1>=dist5)
             Stop1();
@@ -379,7 +370,7 @@ if((cm1<=dist2&&cm1>=dist3))
            else
            { 
            switch(dirFlag)
-          {
+            {
             case 0:
               i=pwm1;
               j=pwm2;
@@ -391,7 +382,7 @@ if((cm1<=dist2&&cm1>=dist3))
                       for(;i<pwm1 && j>pwm2;i+=2,j-=2)
                       {
                        analogWrite(PWM_W1,constrain(i,0,150));
-                       analogWrite(PWM_W2,constrain(j,0,150));
+                       analogWrite(255-PWM_W2,constrain(j,0,150));
                        delay(5);
                       } 
                     }
@@ -400,7 +391,7 @@ if((cm1<=dist2&&cm1>=dist3))
                       for(;i>pwm1 && j<pwm2;i-=2,j+=2)
                       {
                        analogWrite(PWM_W1,constrain(i,0,150));
-                       analogWrite(PWM_W2,constrain(j,0,150));
+                       analogWrite(255-PWM_W2,constrain(j,0,150));
                        delay(5);
                       } 
                      }
@@ -416,7 +407,7 @@ if((cm1<=dist2&&cm1>=dist3))
                     for(;i<pwm1 && j>pwm2;i+=2,j-=2)
                     {
                      analogWrite(PWM_W1,constrain(i,0,150));
-                     analogWrite(PWM_W2,constrain(j,0,150));
+                     analogWrite(255-PWM_W2,constrain(j,0,150));
                      delay(5);
                     } 
                   }
@@ -425,7 +416,7 @@ if((cm1<=dist2&&cm1>=dist3))
                     for(;i>pwm1 && j<pwm2;i-=2,j+=2)
                     {
                      analogWrite(PWM_W1,constrain(i,0,150));
-                     analogWrite(PWM_W2,constrain(j,0,150));
+                     analogWrite(255-PWM_W2,constrain(j,0,150));
                      delay(5);
                     } 
                   }
@@ -451,7 +442,7 @@ if((cm1<=dist2&&cm1>=dist3))
    
    default:
    analogWrite(PWM_W1,constrain(0,0,150));
-   analogWrite(PWM_W2,constrain(0,0,150));
+   analogWrite(255-PWM_W2,constrain(0,0,150));
    analogWrite(PWM_W3,constrain(0,0,150));
 
    */
@@ -467,8 +458,10 @@ if((cm1<=dist2&&cm1>=dist3))
    Serial.println("\t");
 
   
- */      } 
-    }}}
+ */    } 
+     }
+   }
+}
 
 long microsecondsToInches(long microseconds)
 {
