@@ -69,8 +69,8 @@ void decelerate()
 
 void Stop()
 {
-    for(i=pwm1;i>0;i--)
-    {
+    for(i=pwm1;i>0;)
+    {i--;
       analogWrite(PWM_W1,constrain(i,0,150));
       analogWrite(PWM_W3,constrain(i,0,150));
       delay(5);  
@@ -132,8 +132,8 @@ void decelerate1()
 
 void Stop1()
 {
-    for(i=pwm1;i>=0;i--)
-    {
+    for(i=pwm1;i>=0;)
+    {i--;
       analogWrite(PWM_W1,constrain(i,0,150));
       analogWrite(PWM_W2,constrain(i,0,150));
       delay(5);  
